@@ -72,7 +72,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--slm-cream);color:var(--sl
 .cat-scripts::before{background:var(--slm-gold);}
 .cat-decisions::before{background:var(--slm-sage);}
 .cat-ops::before{background:#4a6fa5;}
-.cat-knowledge::before{background:var(--slm-rust);}
+.cat-knowledge::before{background:var(--slm-rust);}.cat-sales::before{background:#2c7a4b;}
 .cat-header{display:flex;align-items:center;gap:12px;margin-bottom:13px;}
 .cat-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .cat-sops .cat-icon{background:rgba(46,79,76,.08);}
@@ -265,7 +265,8 @@ const CATS = {
   scripts:   {label:"02 — Call Scripts",                  icon:"💬",bc:"badge-scripts"},
   decisions: {label:"03 — Decision Rules",                 icon:"⚖️",bc:"badge-decisions"},
   ops:       {label:"04 — Operations & Standards",         icon:"⚙️",bc:"badge-ops"},
-  knowledge: {label:"05 — Knowledge Articles",             icon:"🪨",bc:"badge-knowledge"}
+  knowledge: {label:"05 — Knowledge Articles",             icon:"🪨",bc:"badge-knowledge"},
+  sales:     {label:"06 — Sales Training",                   icon:"💼",bc:"badge-sales"}
 };
 
 function init() {
