@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stone Slab Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f4f0; color: #1a1a18; padding: 2rem 1rem; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e0dfd7; padding: 1.75rem; max-width: 680px; margin: 0 auto; }
+  h2 { font-size: 18px; font-weight: 500; margin-bottom: 1.25rem; }
+  h3 { font-size: 14px; font-weight: 500; color: #5f5e5a; margin: 1.25rem 0 0.6rem; text-transform: uppercase; letter-spacing: .04em; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .ig { display: flex; flex-direction: column; gap: 5px; }
+  .ig label { font-size: 13px; color: #5f5e5a; }
+  .ig input, .ig select { border: 1px solid #d3d1c7; border-radius: 8px; padding: 8px 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; width: 100%; }
+  .ig input:focus, .ig select:focus { border-color: #7f77dd; box-shadow: 0 0 0 2px rgba(127,119,221,.15); }
+  .divider { border: none; border-top: 1px solid #e8e7e0; margin: 1.25rem 0; }
+  .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 1rem 0; }
+  .metric { background: #f5f4f0; border-radius: 8px; padding: .8rem 1rem; }
+  .metric-label { font-size: 12px; color: #888780; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; }
+  .metric-unit { font-size: 13px; font-weight: 400; color: #888780; }
+  .note { background: #e6f1fb; border-radius: 8px; padding: .75rem 1rem; font-size: 13px; color: #185fa5; margin: .75rem 0; display: none; }
+  .breakdown { font-size: 13px; color: #888780; line-height: 1.8; margin-top: .5rem; }
+  .breakdown b { color: #1a1a18; font-weight: 500; }
+  .edge-row { display: grid; grid-template-columns: 1fr 1fr 36px; gap: 10px; margin-bottom: 10px; align-items: end; }
+  .add-btn { background: transparent; border: 1px solid #d3d1c7; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13px; color: #1a1a18; margin-bottom: 4px; }
+  .add-btn:hover { background: #f5f4f0; }
+  .rm-btn { background: transparent; border: 1px solid #d3d1c7; border-radius: 8px; width: 34px; height: 36px; cursor: pointer; font-size: 18px; color: #888780; display: flex; align-items: center; justify-content: center; }
+  .rm-btn:hover { color: #1a1a18; background: #f5f4f0; }
+  @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } .edge-row { grid-template-columns: 1fr 1fr 36px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Stone slab material calculator</h2>
+
+  <h3>Project info</h3>
+  <div class="row2">
+    <div class="ig">
+      <label>Countertop area (sq ft from PO)</label>
+      <input type="number" id="sqft" value="45" min="1" step="0.5" oninput="calc()">
+    </div>
+    <div class="ig">
+      <label>Complexity / pattern match</label>
+      <select id="waste" onchange="calc()">
+        <option value="0.10">Simple rectangle (+10%)</option>
+        <option value="0.15" selected>L-shape / multi-section (+15%)</option>
+        <option value="0.20">Many angles or cuts (+20%)</option>
+        <option value="0.25">Vein matching — marble/quartzite (+25%)</option>
+        <option value="0.30">Complex vein + angles (+30%)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="ig">
+      <label>Slab size</label>
+      <select id="slabsize" onchange="calc()">
+        <option value="55">Standard (~55 sq ft)</option>
+        <option value="62" selected>Standard large (~62 sq ft)</option>
+        <option value="70">Jumbo (~70 sq ft)</option>
+        <option value="78">Jumbo XL (~78 sq ft)</option>
+      </select>
+    </div>
+    <div class="ig">
+      <label>Usable slab yield</label>
+      <select id="yld" onchange="calc()">
+        <option value="0.80">80% — complex layout</option>
+        <option value="0.83" selected>83% — typical</option>
+        <option value="0.87">87% — simple runs</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h3>Edge details</h3>
+  <div id="elist"></div>
+  <button class="add-btn" onclick="addEdge()">+ Add edge section</button>
+
+  <div class="divider"></div>
+  <h3>Material order</h3>
+
+  <div class="results">
+    <div class="metric"><div class="metric-label">Adjusted area needed</div><div class="metric-value" id="r1">—</div></div>
+    <div class="metric"><div class="metric-label">Slabs to order</div><div class="metric-value" id="r2">—</div></div>
+    <div class="metric"><div class="metric-label">Waste factor</div><div class="metric-value" id="r3">—</div></div>
+    <div class="metric"><div class="metric-label">Mitered LF</div><div class="metric-value" id="r4">—</div></div>
+  </div>
+
+  <div class="note" id="nb"></div>
+  <div class="breakdown" id="bd"></div>
+</div>
+
+<script>
+  let ec = 0, edges = [];
+
+  function addEdge() {
+    const id = ec++;
+    edges.push({ id, lf: 0, profile: 'eased' });
+    renderEdges();
+    calc();
+  }
+
+  function removeEdge(id) {
+    edges = edges.filter(e => e.id !== id);
+    renderEdges();
+    calc();
+  }
+
+  function updateEdge(id, f, v) {
+    const e = edges.find(x => x.id === id);
+    if (!e) return;
+    if (f === 'lf') e.lf = parseFloat(v) || 0;
+    if (f === 'profile') e.profile = v;
+    calc();
+  }
+
+  function renderEdges() {
+    const el = document.getElementById('elist');
+    if (!edges.length) { el.innerHTML = '<p style="font-size:13px;color:#888780;margin-bottom:10px">No edges added — add mitered waterfall faces to include extra slab SF.</p>'; return; }
+    el.innerHTML = edges.map(e => `
+      <div class="edge-row">
+        <div class="ig"><label>Linear feet</label><input type="number" min="0" step="0.5" value="${e.lf}" oninput="updateEdge(${e.id},'lf',this.value)"></div>
+        <div class="ig"><label>Profile</label><select onchange="updateEdge(${e.id},'profile',this.value)">
+          <option value="eased"${e.profile==='eased'?' selected':''}>Eased / straight</option>
+          <option value="bullnose"${e.profile==='bullnose'?' selected':''}>Bullnose / ogee</option>
+          <option value="miter"${e.profile==='miter'?' selected':''}>Mitered waterfall</option>
+        </select></div>
+        <button class="rm-btn" onclick="removeEdge(${e.id})" aria-label="Remove">×</button>
+      </div>`).join('');
+  }
+
+  function calc() {
+    const base = parseFloat(document.getElementById('sqft').value) || 0;
+    const wp = parseFloat(document.getElementById('waste').value);
+    const ss = parseFloat(document.getElementById('slabsize').value);
+    const yp = parseFloat(document.getElementById('yld').value);
+    let miterLF = 0, miterSF = 0;
+    edges.forEach(e => { if (e.profile === 'miter') { miterLF += e.lf; miterSF += e.lf * 1.5; } });
+    const adj = (base * (1 + wp)) + miterSF;
+    const usable = ss * yp;
+    const slabs = Math.ceil(adj / usable);
+
+    document.getElementById('r1').innerHTML = adj.toFixed(1) + '<span class="metric-unit"> sf</span>';
+    document.getElementById('r2').innerHTML = slabs + '<span class="metric-unit"> slab' + (slabs !== 1 ? 's' : '') + '</span>';
+    document.getElementById('r3').innerHTML = (wp * 100).toFixed(0) + '<span class="metric-unit">%</span>';
+    document.getElementById('r4').innerHTML = miterLF > 0 ? miterLF.toFixed(1) + '<span class="metric-unit"> lf</span>' : '<span class="metric-unit">none</span>';
+
+    const nb = document.getElementById('nb');
+    if (miterLF > 0) {
+      nb.style.display = 'block';
+      nb.textContent = '⚠ ' + miterSF.toFixed(1) + ' sf added for ' + miterLF.toFixed(1) + ' lf of mitered waterfall edge. Confirm layout with fabricator.';
+    } else { nb.style.display = 'none'; }
+
+    document.getElementById('bd').innerHTML =
+      '<b>' + base.toFixed(1) + ' sf</b> × <b>' + (1 + wp).toFixed(2) + '</b> waste' +
+      (miterSF > 0 ? ' + <b>' + miterSF.toFixed(1) + ' sf</b> miter faces' : '') +
+      ' = <b>' + adj.toFixed(1) + ' sf</b> needed ÷ <b>' + usable.toFixed(1) + ' sf</b> usable/slab → round up to <b>' + slabs + ' slab' + (slabs !== 1 ? 's' : '') + '</b>';
+  }
+
+  renderEdges();
+  calc();
+</script>
+</body>
+</html>
