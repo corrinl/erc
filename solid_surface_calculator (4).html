@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solid Surface / Corian Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f4f0; color: #1a1a18; padding: 2rem 1rem; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e0dfd7; padding: 1.75rem; max-width: 680px; margin: 0 auto; }
+  h2 { font-size: 18px; font-weight: 500; margin-bottom: .25rem; }
+  .subtitle { font-size: 13px; color: #888780; margin-bottom: 1.25rem; }
+  h3 { font-size: 13px; font-weight: 500; color: #5f5e5a; margin: 1.25rem 0 .6rem; text-transform: uppercase; letter-spacing: .04em; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .ig { display: flex; flex-direction: column; gap: 5px; }
+  .ig label { font-size: 13px; color: #5f5e5a; }
+  .ig input, .ig select { border: 1px solid #d3d1c7; border-radius: 8px; padding: 8px 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; width: 100%; }
+  .ig input:focus, .ig select:focus { border-color: #1d9e75; box-shadow: 0 0 0 2px rgba(29,158,117,.15); }
+  .divider { border: none; border-top: 1px solid #e8e7e0; margin: 1.25rem 0; }
+  .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 1rem 0; }
+  .metric { background: #f5f4f0; border-radius: 8px; padding: .8rem 1rem; }
+  .metric-label { font-size: 12px; color: #888780; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; }
+  .metric-unit { font-size: 13px; font-weight: 400; color: #888780; }
+  .note { border-radius: 8px; padding: .75rem 1rem; font-size: 13px; margin: .75rem 0; display: none; }
+  .note-info { background: #e1f5ee; color: #0f6e56; }
+  .note-warn { background: #faeeda; color: #854f0b; }
+  .breakdown { font-size: 13px; color: #888780; line-height: 2; margin-top: .5rem; }
+  .breakdown b { color: #1a1a18; font-weight: 500; }
+  .edge-row { display: grid; grid-template-columns: 1fr 1fr 36px; gap: 10px; margin-bottom: 10px; align-items: end; }
+  .add-btn { background: transparent; border: 1px solid #d3d1c7; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13px; color: #1a1a18; margin-bottom: 4px; }
+  .add-btn:hover { background: #f5f4f0; }
+  .rm-btn { background: transparent; border: 1px solid #d3d1c7; border-radius: 8px; width: 34px; height: 36px; cursor: pointer; font-size: 18px; color: #888780; display: flex; align-items: center; justify-content: center; }
+  .rm-btn:hover { color: #1a1a18; background: #f5f4f0; }
+  .hint { font-size: 12px; color: #aaa9a2; margin-top: 2px; }
+  .sheet-info { background: #e1f5ee; border-radius: 8px; padding: .6rem 1rem; font-size: 13px; color: #0f6e56; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; }
+  @media (max-width: 500px) { .row2, .row3 { grid-template-columns: 1fr; } .edge-row { grid-template-columns: 1fr 1fr 36px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Solid surface / Corian calculator</h2>
+  <p class="subtitle">Sheet-based material — seams are welded and sanded invisible</p>
+
+  <h3>Project info</h3>
+  <div class="sheet-info">
+    &#9632; Standard sheet: 30 sq ft &nbsp;|&nbsp; Typical size: 30" × 144" (2.5' × 12')
+  </div>
+
+  <div class="row2">
+    <div class="ig">
+      <label>Countertop area (sq ft from PO)</label>
+      <input type="number" id="sqft" value="45" min="1" step="0.5" oninput="calc()">
+    </div>
+    <div class="ig">
+      <label>Sheet size</label>
+      <select id="sheetsize" onchange="calc()">
+        <option value="30" selected>Standard — 30 sq ft (30" × 144")</option>
+        <option value="37.5">Wide — 37.5 sq ft (30" × 180")</option>
+        <option value="20">Half sheet — 20 sq ft (30" × 96")</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="ig">
+      <label>Layout complexity</label>
+      <select id="waste" onchange="calc()">
+        <option value="0.10">Simple straight run (+10%)</option>
+        <option value="0.15" selected>L-shape / multiple sections (+15%)</option>
+        <option value="0.20">Many cuts or corners (+20%)</option>
+        <option value="0.25">Complex layout (+25%)</option>
+      </select>
+    </div>
+    <div class="ig">
+      <label>Usable sheet yield</label>
+      <select id="yld" onchange="calc()">
+        <option value="0.85">85% — tight layout</option>
+        <option value="0.88" selected>88% — typical</option>
+        <option value="0.92">92% — simple runs</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h3>Cutouts</h3>
+  <div class="row3">
+    <div class="ig">
+      <label>Undermount sinks</label>
+      <input type="number" id="sinks" value="0" min="0" step="1" oninput="calc()">
+      <span class="hint">~3 sf material lost each</span>
+    </div>
+    <div class="ig">
+      <label>Cooktop cutouts</label>
+      <input type="number" id="cooktops" value="0" min="0" step="1" oninput="calc()">
+      <span class="hint">~2.5 sf material lost each</span>
+    </div>
+    <div class="ig">
+      <label>Other cutouts</label>
+      <input type="number" id="other" value="0" min="0" step="1" oninput="calc()">
+      <span class="hint">~1.5 sf each (soap dispenser, etc.)</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h3>Edge &amp; buildup details</h3>
+  <p style="font-size:13px;color:#888780;margin-bottom:10px">Solid surface edges are built up from strips laminated to the underside. Add any special edge sections that need extra material.</p>
+  <div id="elist"></div>
+  <button class="add-btn" onclick="addEdge()">+ Add edge section</button>
+
+  <div class="divider"></div>
+  <h3>Material order</h3>
+  <div class="results">
+    <div class="metric"><div class="metric-label">Adjusted area needed</div><div class="metric-value" id="r1">—</div></div>
+    <div class="metric"><div class="metric-label">Sheets to order</div><div class="metric-value" id="r2">—</div></div>
+    <div class="metric"><div class="metric-label">Waste factor</div><div class="metric-value" id="r3">—</div></div>
+    <div class="metric"><div class="metric-label">Cutout pieces</div><div class="metric-value" id="r4">—</div></div>
+  </div>
+
+  <div class="note note-info" id="nb-seam"></div>
+  <div class="note note-warn" id="nb-buildup"></div>
+  <div class="breakdown" id="bd"></div>
+</div>
+
+<script>
+  let ec = 0, edges = [];
+
+  function addEdge() {
+    const id = ec++;
+    edges.push({ id, lf: 0, profile: 'standard' });
+    renderEdges();
+    calc();
+  }
+
+  function removeEdge(id) {
+    edges = edges.filter(e => e.id !== id);
+    renderEdges();
+    calc();
+  }
+
+  function updateEdge(id, f, v) {
+    const e = edges.find(x => x.id === id);
+    if (!e) return;
+    if (f === 'lf') e.lf = parseFloat(v) || 0;
+    if (f === 'profile') e.profile = v;
+    calc();
+  }
+
+  function renderEdges() {
+    const el = document.getElementById('elist');
+    if (!edges.length) {
+      el.innerHTML = '<p style="font-size:13px;color:#aaa9a2;margin-bottom:10px">No edge sections added.</p>';
+      return;
+    }
+    el.innerHTML = edges.map(e => `
+      <div class="edge-row">
+        <div class="ig"><label>Linear feet</label><input type="number" min="0" step="0.5" value="${e.lf}" oninput="updateEdge(${e.id},'lf',this.value)"></div>
+        <div class="ig"><label>Edge type</label><select onchange="updateEdge(${e.id},'profile',this.value)">
+          <option value="standard"${e.profile==='standard'?' selected':''}>Standard buildup strip</option>
+          <option value="double"${e.profile==='double'?' selected':''}>Double buildup (thick edge)</option>
+          <option value="waterfall"${e.profile==='waterfall'?' selected':''}>Waterfall / full vertical face</option>
+        </select></div>
+        <button class="rm-btn" onclick="removeEdge(${e.id})" aria-label="Remove">×</button>
+      </div>`).join('');
+  }
+
+  function calc() {
+    const base = parseFloat(document.getElementById('sqft').value) || 0;
+    const wp = parseFloat(document.getElementById('waste').value);
+    const ss = parseFloat(document.getElementById('sheetsize').value);
+    const yp = parseFloat(document.getElementById('yld').value);
+    const sinks = parseInt(document.getElementById('sinks').value) || 0;
+    const cooktops = parseInt(document.getElementById('cooktops').value) || 0;
+    const other = parseInt(document.getElementById('other').value) || 0;
+    const totalCutouts = sinks + cooktops + other;
+
+    // Buildup edge extra material
+    let buildupSF = 0;
+    let hasWaterfall = false;
+    edges.forEach(e => {
+      if (e.profile === 'standard') buildupSF += e.lf * 0.25;
+      if (e.profile === 'double') buildupSF += e.lf * 0.5;
+      if (e.profile === 'waterfall') { buildupSF += e.lf * 3; hasWaterfall = true; }
+    });
+
+    const adj = (base * (1 + wp)) + buildupSF;
+    const usable = ss * yp;
+    const sheets = Math.ceil(adj / usable);
+
+    document.getElementById('r1').innerHTML = adj.toFixed(1) + '<span class="metric-unit"> sf</span>';
+    document.getElementById('r2').innerHTML = sheets + '<span class="metric-unit"> sheet' + (sheets !== 1 ? 's' : '') + '</span>';
+    document.getElementById('r3').innerHTML = (wp * 100).toFixed(0) + '<span class="metric-unit">%</span>';
+    document.getElementById('r4').innerHTML = totalCutouts + '<span class="metric-unit"> piece' + (totalCutouts !== 1 ? 's' : '') + '</span>';
+
+    // Seam note: solid surface needs a seam every ~12 linear feet
+    const seamNote = document.getElementById('nb-seam');
+    if (base > 25) {
+      seamNote.style.display = 'block';
+      seamNote.textContent = '✓ Seams: solid surface sheets are 12\' long — runs over 12 lf will need a seamed joint. Plan seam placement away from sinks and high-traffic areas. Seams are welded and sanded flush (invisible when done correctly).';
+    } else {
+      seamNote.style.display = 'none';
+    }
+
+    const buildupNote = document.getElementById('nb-buildup');
+    if (hasWaterfall) {
+      buildupNote.style.display = 'block';
+      buildupNote.textContent = '⚠ Waterfall edge detected: vertical face material is calculated at 3 sf per linear foot. Confirm exact panel height and grain direction with fabricator — color-matched grain on vertical faces may require a dedicated sheet.';
+    } else {
+      buildupNote.style.display = 'none';
+    }
+
+    let breakdownHTML = '<b>' + base.toFixed(1) + ' sf</b> PO area × <b>' + (1 + wp).toFixed(2) + '</b> waste';
+    if (buildupSF > 0) breakdownHTML += ' + <b>' + buildupSF.toFixed(1) + ' sf</b> edge buildup strips';
+    breakdownHTML += ' = <b>' + adj.toFixed(1) + ' sf</b> needed';
+    breakdownHTML += ' ÷ <b>' + usable.toFixed(1) + ' sf</b> usable/sheet';
+    breakdownHTML += ' → <b>' + sheets + ' sheet' + (sheets !== 1 ? 's' : '') + '</b>';
+    if (totalCutouts > 0) {
+      breakdownHTML += '<br>Cutout offcuts (' + totalCutouts + ' piece' + (totalCutouts !== 1 ? 's' : '') + ') can be saved for repairs or small accent pieces.';
+    }
+    document.getElementById('bd').innerHTML = breakdownHTML;
+  }
+
+  renderEdges();
+  calc();
+</script>
+</body>
+</html>
